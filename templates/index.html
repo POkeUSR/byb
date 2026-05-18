@@ -400,8 +400,10 @@
                     if (bootProgressFill) bootProgressFill.style.width = `${bootProgress}%`;
                     if (bootProgressLabel) bootProgressLabel.textContent = 'live';
                 }
-            } else {
+            } else if (data.type === 'telegram_alert') {
                 processAlert(data, { allowSound: true, allowHighAlert: true });
+            } else {
+                processAlert(data);
             }
         };
 
@@ -622,14 +624,14 @@
 
         async function pollNewHighAlerts() {
             try {
-                const response = await fetch(`/api/recent-alerts?limit=${maxHighAlertCards}&min_score=${highAlertScoreThreshold}`);
+                const response = await fetch(`/api/recent-telegram-alerts?limit=${maxHighAlertCards}&since=${dashboardStartedAtMs}`);
                 if (!response.ok) return;
                 const payload = await response.json();
                 const alerts = Array.isArray(payload.alerts) ? payload.alerts : [];
                 alerts.reverse().forEach(alert => {
                     const timestamp = toNumber(alert.timestamp);
                     const key = `${alert.symbol}:${alert.timestamp}:${alert.score}`;
-                    if (timestamp >= dashboardStartedAtMs && alert.score > highAlertScoreThreshold && !seenHighAlertKeys.has(key)) {
+                    if (timestamp >= dashboardStartedAtMs && !seenHighAlertKeys.has(key)) {
                         upsertHighAlert(alert);
                     }
                 });

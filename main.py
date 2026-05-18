@@ -45,11 +45,11 @@ class CryptoScanner:
         loader = HistoryLoader()
         await loader.load_all_histories()
 
-    async def send_telegram_alert(self, message: str):
+    async def send_telegram_alert(self, message: str) -> bool:
         """Send alert to Telegram."""
         if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
             logger.warning("Telegram not configured, skipping alert")
-            return
+            return False
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": TELEGRAM_CHAT_ID,
@@ -62,15 +62,24 @@ class CryptoScanner:
                 async with session.post(url, json=payload) as resp:
                     if resp.status != 200:
                         logger.error(f"Telegram send failed: {resp.status}")
+                        return False
+                    return True
             except Exception as e:
                 logger.error(f"Telegram error: {e}")
+                return False
 
     async def telegram_worker(self):
         """Send Telegram alerts outside the scan loop."""
         while True:
-            message = await self.telegram_queue.get()
+            item = await self.telegram_queue.get()
             try:
-                await self.send_telegram_alert(message)
+                sent = await self.send_telegram_alert(item["message"])
+                if sent:
+                    web_alert = dict(item["alert"])
+                    web_alert["type"] = "telegram_alert"
+                    web_alert_json = json.dumps(web_alert)
+                    await self.redis_pub.xadd("telegram_alerts", {"data": web_alert_json}, maxlen=1000, approximate=True)
+                    await self.redis_pub.publish("telegram_alerts", web_alert_json)
             finally:
                 self.telegram_queue.task_done()
 
@@ -113,7 +122,7 @@ class CryptoScanner:
             f'<a href="{tradingview_link}">Open TradingView chart</a>'
         )
         try:
-            self.telegram_queue.put_nowait(message)
+            self.telegram_queue.put_nowait({"message": message, "alert": alert})
             logger.info(f"Queued Telegram alert for {symbol} score={score}")
         except asyncio.QueueFull:
             logger.error(f"Telegram queue full, dropped alert for {symbol} score={score}")

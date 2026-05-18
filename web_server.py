@@ -173,8 +173,8 @@ async def broadcast(message: str):
 async def pubsub_listener():
     """Listen to Redis Pub/Sub channel and broadcast messages."""
     pubsub = redis_client.pubsub()
-    await pubsub.subscribe('scanner_alerts')
-    logger.info("Web server subscribed to scanner_alerts channel")
+    await pubsub.subscribe('scanner_alerts', 'telegram_alerts')
+    logger.info("Web server subscribed to scanner_alerts and telegram_alerts channels")
     try:
         async for message in pubsub.listen():
             if message['type'] == 'message':
@@ -387,6 +387,35 @@ async def recent_alerts_api(limit: int = 100, min_score: float = 0):
                 break
     except Exception as e:
         logger.error(f"Recent alerts API error: {e}")
+        return JSONResponse({"alerts": [], "error": str(e)}, status_code=500)
+
+    return {"alerts": alerts}
+
+@app.get("/api/recent-telegram-alerts")
+async def recent_telegram_alerts_api(limit: int = 50, since: float = 0):
+    """Return Telegram alerts mirrored to the dashboard."""
+    limit = max(1, min(limit, 100))
+    alerts = []
+    try:
+        entries = await redis_client.xrevrange("telegram_alerts", count=1000)
+        for _, fields in entries:
+            raw = fields.get("data")
+            if not raw:
+                continue
+            try:
+                alert = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+
+            timestamp = float(alert.get("timestamp") or 0)
+            if since and timestamp < since:
+                continue
+
+            alerts.append(alert)
+            if len(alerts) >= limit:
+                break
+    except Exception as e:
+        logger.error(f"Recent Telegram alerts API error: {e}")
         return JSONResponse({"alerts": [], "error": str(e)}, status_code=500)
 
     return {"alerts": alerts}
