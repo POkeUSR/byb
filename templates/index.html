@@ -391,7 +391,9 @@
                 const streamerAlive = heartbeats['Streamer'] && now - heartbeats['Streamer'] < heartbeatHealthySeconds;
                 const engineAlive = heartbeats['Engine'] && now - heartbeats['Engine'] < heartbeatHealthySeconds;
                 if (data.redis_status === 'alive' && streamerAlive && engineAlive) {
-                    hideLoadingAlert();
+                    bootProgress = Math.max(bootProgress, 96);
+                    if (bootProgressFill) bootProgressFill.style.width = `${bootProgress}%`;
+                    if (bootProgressLabel) bootProgressLabel.textContent = 'live';
                 }
             } else {
                 const { symbol, score, reasoning, price, timestamp, debug } = data;
