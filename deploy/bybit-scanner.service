@@ -1,0 +1,17 @@
+[Unit]
+Description=Bybit Spot Scanner
+After=network-online.target redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/bybit
+EnvironmentFile=/opt/bybit/.env
+ExecStart=/opt/bybit/.venv/bin/python /opt/bybit/main.py
+Restart=always
+RestartSec=5
+User=bybit
+Group=bybit
+
+[Install]
+WantedBy=multi-user.target

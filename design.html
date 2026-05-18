@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART OPS | Аудит 152-ФЗ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&family=Unbounded:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --accent: #00f3ff;
+            --accent-dim: rgba(0, 243, 255, 0.3);
+            --text: #e0e0e0;
+            --code-bg: rgba(0, 20, 20, 0.8);
+            --border: rgba(0, 243, 255, 0.2);
+            --error: #ff3e3e;
+            --success: #00ff9d;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Unbounded', sans-serif; text-transform: uppercase; }
+
+        /* Фоновые эффекты */
+        #matrix { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.1; }
+        body::before {
+            content: " ";
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 1000;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Прелоадер */
+        #preloader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+        .loader-terminal { width: 320px; color: var(--accent); font-size: 0.8rem; }
+        .loader-line { margin-bottom: 8px; white-space: nowrap; overflow: hidden; border-right: 2px solid var(--accent); animation: typing 1.5s steps(40, end), blink-caret 0.5s step-end infinite; }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--accent) } }
+        
+        body.loaded #preloader { opacity: 0; visibility: hidden; }
+
+        /* Кастомные элементы интерфейса */
+        .glass-panel {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .neo-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            transition: 0.3s;
+        }
+        .neo-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-dim);
+            outline: none;
+        }
+
+        .neo-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .neo-btn:hover:not(:disabled) {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent);
+        }
+        .neo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .loading { position: relative; color: transparent !important; }
+        .loading::after {
+            content: "";
+            position: absolute;
+            width: 20px; height: 20px;
+            top: 50%; left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #000;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .risk-badge { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Прелоадер -->
+    <div id="preloader">
+        <div class="loader-terminal">
+            <div class="loader-line">> INITIALIZING COMPLIANCE_CORE...</div>
+            <div class="loader-line">> LOADING DATABASE: 152-FZ_2024</div>
+            <div class="loader-line">> SYSTEM STATUS: <span style="color:var(--success)">READY</span></div>
+        </div>
+    </div>
+
+    <canvas id="matrix"></canvas>
+
+    <div class="container mx-auto px-4 py-12 max-w-4xl relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="inline-block text-xs border border-[var(--accent)] px-3 py-1 text-[var(--accent)] mb-4">
+                SECURE_AUDIT_V2.0
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tighter">
+                Аудит <span class="text-[var(--accent)]">152-ФЗ</span>
+            </h1>
+            <p class="text-gray-400 font-light max-w-xl mx-auto">
+                Проверка цифрового следа на соответствие законодательству о персональных данных.
+            </p>
+        </div>
+
+        <!-- Input Form -->
+        <div class="glass-panel rounded-none p-2 mb-8 border-l-4 border-l-[var(--accent)]">
+            <div class="flex flex-col md:flex-row gap-2">
+                <input 
+                    type="text" 
+                    id="urlInput" 
+                    placeholder="ENTER_TARGET_URL (example.com)"
+                    class="neo-input flex-1 px-6 py-4 font-mono text-sm"
+                >
+                <button 
+                    id="scanBtn"
+                    onclick="startScan()"
+                    class="neo-btn px-8 py-4 text-sm"
+                >
+                    Запустить сканирование
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progressSection" class="hidden mb-12">
+            <div class="glass-panel p-6 border-t-2 border-t-[var(--accent)]">
+                <div class="flex items-center justify-between mb-4 font-mono text-xs">
+                    <span id="progressStatus" class="text-[var(--accent)]">ANALYZING...</span>
+                    <span id="progressPercent" class="text-[var(--accent)]">0%</span>
+                </div>
+                <div class="w-full bg-black/50 h-1 overflow-hidden">
+                    <div id="progressBar" class="bg-[var(--accent)] h-full transition-all duration-500 shadow-[0_0_10px_#00f3ff]" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Box -->
+        <div class="border border-[var(--error)] bg-[rgba(255,62,62,0.05)] p-6 mb-12">
+            <h3 class="text-[var(--error)] font-bold text-sm mb-3 flex items-center gap-2">
+                <span>[!]</span> CRITICAL_WARNING: РИСКИ БИЗНЕСА
+            </h3>
+            <div class="grid md:grid-cols-2 gap-4 text-xs text-gray-400">
+                <ul class="space-y-1">
+                    <li>• Отсутствие чекбоксов согласия</li>
+                    <li>• Неявный сбор Cookies</li>
+                </ul>
+                <ul class="space-y-1 text-right md:text-left">
+                    <li class="text-[var(--error)] font-bold">Штрафы до 300 000 ₽</li>
+                    <li>Блокировка ресурса Роскомнадзором</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden space-y-8 mb-12">
+            <!-- Score Card -->
+            <div class="glass-panel p-8 border-r-4 border-r-[var(--accent)]">
+                <div class="flex flex-col md:flex-row items-center gap-10">
+                    <div class="relative">
+                        <div id="scoreCircle" class="w-32 h-32 rounded-none border-2 border-[var(--accent)] flex items-center justify-center text-4xl font-bold text-white bg-black/40">
+                            0
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 bg-[var(--accent)] text-black text-[10px] px-2 font-bold uppercase">Score</div>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h2 class="text-xl mb-4 text-white">Статус соответствия</h2>
+                        <div id="riskLevel" class="risk-badge inline-block px-6 py-2 bg-[var(--error)] text-white font-bold">
+                            -
+                        </div>
+                        <p id="urlDisplay" class="mt-4 text-xs text-[var(--accent)] opacity-60 font-mono"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issues -->
+            <div class="glass-panel p-8">
+                <h3 class="text-lg mb-6 border-b border-[var(--border)] pb-4">Обнаруженные уязвимости</h3>
+                <div id="issuesList" class="space-y-6"></div>
+            </div>
+
+            <!-- Screenshot -->
+            <div id="screenshotSection" class="glass-panel p-4 hidden">
+                <h3 class="text-xs text-gray-500 mb-4 uppercase tracking-widest">Визуальная фиксация</h3>
+                <img id="screenshotImg" src="" alt="Скриншот сайта" class="w-full grayscale hover:grayscale-0 transition-all duration-700 border border-[var(--border)]">
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div id="ctaSection" class="hidden mb-12">
+            <div class="border-2 border-[var(--accent)] p-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 text-[var(--accent)] opacity-20 text-[40px] font-bold">PDF</div>
+                <h2 class="text-xl mb-6 text-white">Требуется деактивация рисков?</h2>
+                
+                <div class="grid md:grid-cols-2 gap-10">
+                    <div>
+                        <p class="text-sm text-gray-400 mb-6">Получите детальный технический отчет со ссылками на статьи закона для ваших разработчиков.</p>
+                        <div class="flex flex-col gap-2">
+                            <input 
+                                type="email" 
+                                id="reportEmail" 
+                                placeholder="YOUR_EMAIL@STORE.COM" 
+                                class="neo-input px-4 py-3 text-xs font-mono"
+                            >
+                            <button 
+                                onclick="requestReport()"
+                                class="neo-btn py-3 text-xs"
+                            >
+                                Сформировать отчет
+                            </button>
+                        </div>
+                        <p id="reportSuccess" class="hidden mt-4 text-[var(--success)] text-xs font-bold animate-pulse">
+                            >> ОТЧЕТ ОТПРАВЛЕН В ОЧЕРЕДЬ ГЕНЕРАЦИИ (15 МИН)
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-col justify-center gap-4">
+                        <p class="text-xs uppercase text-gray-500 tracking-tighter">Срочная консультация:</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="https://t.me/pokeusr" target="_blank" class="neo-btn text-[10px] py-3 text-center">Telegram</a>
+                            <a href="https://wa.me/+79967661012" target="_blank" class="neo-btn text-[10px] py-3 text-center border-[#00ff9d] text-[#00ff9d]">WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div id="error" class="hidden glass-panel border border-[var(--error)] p-6">
+            <h3 class="text-[var(--error)] font-bold mb-2">CRITICAL_ERROR</h3>
+            <p id="errorMessage" class="text-gray-400 text-xs font-mono"></p>
+        </div>
+    </div>
+
+    <!-- What We Check (Static Info) -->
+    <div class="container mx-auto px-4 max-w-4xl pb-20">
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="glass-panel p-6 opacity-60">
+                <h3 class="text-xs font-bold text-[var(--accent)] mb-4 uppercase">Алгоритм проверки</h3>
+                <ul class="space-y-2 text-[10px] text-gray-400 font-mono">
+                    <li>[01] Поиск скриптов аналитики (GA, Metrika)</li>
+                    <li>[02] Детекция форм захвата данных</li>
+                    <li>[03] Проверка ссылок на Policy</li>
+                    <li>[04] Анализ Cookie Consent</li>
+                </ul>
+            </div>
+            <div class="glass-panel p-6 opacity-60">
+                <h3 class="text-xs font-bold text-[var(--accent)] mb-4 uppercase">Результат</h3>
+                <ul class="space-y-2 text-[10px] text-gray-400 font-mono">
+                    <li>[RES] Расчет вероятности штрафа</li>
+                    <li>[RES] Список технических правок</li>
+                    <li>[RES] Готовые шаблоны документов</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Эффект Матрицы ---
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const chars = "0123456789ABCDEFHIJKLMNOPQRSTUVXYZ";
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00f3ff";
+            ctx.font = fontSize + "px monospace";
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // --- Прелоадер ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 1000);
+        });
+
+        // --- ВАША ОРИГИНАЛЬНАЯ ЛОГИКА (БЕЗ ИЗМЕНЕНИЙ) ---
+        let progressInterval;
+        
+        function showProgress() {
+            const progressSection = document.getElementById('progressSection');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressStatus = document.getElementById('progressStatus');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+            const ctaSection = document.getElementById('ctaSection');
+            
+            progressSection.classList.remove('hidden');
+            results.classList.add('hidden');
+            error.classList.add('hidden');
+            ctaSection.classList.add('hidden');
+            
+            let percent = 0;
+            const statuses = [
+                'INITIALIZING SCAN...',
+                'FETCHING TARGET_PAGE...',
+                'PARSING DOM_TREE...',
+                'IDENTIFYING COOKIES...',
+                'SEARCHING ANALYTICS...',
+                'VERIFYING LEGAL_DOCS...',
+                'COMPILING_REPORT...'
+            ];
+            
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+            progressStatus.textContent = statuses[0];
+            
+            progressInterval = setInterval(() => {
+                if (percent < 100) {
+                    percent += Math.random() * 20;
+                    if (percent > 100) percent = 100;
+                    progressBar.style.width = percent + '%';
+                    progressPercent.textContent = Math.round(percent) + '%';
+                    
+                    const statusIndex = Math.min(Math.floor(percent / 20), statuses.length - 1);
+                    progressStatus.textContent = statuses[statusIndex];
+                }
+            }, 800);
+        }
+        
+        function hideProgress() {
+            const progressSection = document.getElementById('progressSection');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressPercent.textContent = '100%';
+            
+            setTimeout(() => {
+                progressSection.classList.add('hidden');
+                progressBar.style.width = '0%';
+            }, 500);
+        }
+        
+        async function startScan() {
+            const urlInput = document.getElementById('urlInput');
+            const scanBtn = document.getElementById('scanBtn');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+            
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Пожалуйста, введите URL сайта');
+                return;
+            }
+            
+            showProgress();
+            results.classList.add('hidden');
+            error.classList.add('hidden');
+            scanBtn.disabled = true;
+            scanBtn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                clearInterval(progressInterval);
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressPercent').textContent = '100%';
+                document.getElementById('progressStatus').textContent = 'READY.';
+                
+                setTimeout(() => {
+                    document.getElementById('progressSection').classList.add('hidden');
+                    document.getElementById('progressBar').style.width = '0%';
+                }, 800);
+                
+                if (data.error && data.risk_level === 'Ошибка') {
+                    error.classList.remove('hidden');
+                    document.getElementById('errorMessage').textContent = data.issues?.[0]?.problem || data.error;
+                    return;
+                }
+                
+                results.classList.remove('hidden');
+                document.getElementById('urlDisplay').textContent = "TARGET: " + data.url;
+                document.getElementById('ctaSection').classList.remove('hidden');
+                
+                const scoreCircle = document.getElementById('scoreCircle');
+                scoreCircle.textContent = data.score;
+                
+                if (data.score <= 30) {
+                    scoreCircle.style.borderColor = 'var(--success)';
+                    scoreCircle.style.color = 'var(--success)';
+                } else if (data.score <= 70) {
+                    scoreCircle.style.borderColor = '#eab308';
+                    scoreCircle.style.color = '#eab308';
+                } else {
+                    scoreCircle.style.borderColor = 'var(--error)';
+                    scoreCircle.style.color = 'var(--error)';
+                }
+                
+                const riskLevel = document.getElementById('riskLevel');
+                riskLevel.textContent = data.risk_level;
+                if (data.risk_level === 'Низкий') {
+                    riskLevel.className = 'risk-badge inline-block px-6 py-2 bg-green-600 text-white font-bold';
+                } else if (data.risk_level === 'Средний') {
+                    riskLevel.className = 'risk-badge inline-block px-6 py-2 bg-yellow-600 text-white font-bold';
+                } else {
+                    riskLevel.className = 'risk-badge inline-block px-6 py-2 bg-red-600 text-white font-bold';
+                }
+                
+                const issuesList = document.getElementById('issuesList');
+                issuesList.innerHTML = '';
+                
+                if (data.issues && data.issues.length > 0) {
+                    data.issues.forEach(issue => {
+                        const issueCard = document.createElement('div');
+                        issueCard.className = 'border-l-2 border-[var(--error)] pl-6 py-2 bg-white/5';
+                        
+                        let riskColor = 'text-gray-400';
+                        if (issue.risk === 'Высокий') riskColor = 'text-[var(--error)] font-bold';
+                        else if (issue.risk === 'Средний') riskColor = 'text-yellow-500 font-bold';
+                        
+                        issueCard.innerHTML = `
+                            <p class="text-white text-sm mb-2 font-bold uppercase tracking-wider">${issue.problem}</p>
+                            <p class="text-[10px] ${riskColor} mb-2 uppercase tracking-widest">Risk_Level: ${issue.risk}</p>
+                            <p class="text-xs text-gray-400 font-mono bg-black/40 p-3 border border-white/10">>> FIX: ${issue.fix}</p>
+                        `;
+                        issuesList.appendChild(issueCard);
+                    });
+                } else {
+                    issuesList.innerHTML = '<p class="text-[var(--success)] font-bold font-mono">>> OK. NO_VULNERABILITIES_DETECTED.</p>';
+                }
+                
+                const screenshotSection = document.getElementById('screenshotSection');
+                const screenshotImg = document.getElementById('screenshotImg');
+                if (data.screenshot_url) {
+                    screenshotSection.classList.remove('hidden');
+                    screenshotImg.src = data.screenshot_url;
+                } else {
+                    screenshotSection.classList.add('hidden');
+                }
+                
+            } catch (err) {
+                error.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = 'SYSTEM_FAILURE: ' + err.message;
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.classList.remove('loading');
+            }
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') startScan();
+        });
+        
+        async function requestReport() {
+            const emailInput = document.getElementById('reportEmail');
+            const email = emailInput.value.trim();
+            const urlDisplay = document.getElementById('urlDisplay');
+            const currentUrl = urlDisplay.textContent.replace("TARGET: ", "");
+            
+            if (!email || !email.includes('@')) {
+                alert('Пожалуйста, введите корректный email');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/collect-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, url: currentUrl })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('reportSuccess').classList.remove('hidden');
+                    emailInput.value = '';
+                }
+            } catch (err) {
+                alert('Ошибка связи с сервером.');
+            }
+        }
+    </script>
+</body>
+</html>

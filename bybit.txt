@@ -1,0 +1,9 @@
+API BYBIT
+
+API key
+gjVXIt2S6eVTin0zQn
+
+API secret
+4avDlI1EgvQE7R0gvffQz9vPSq1kiVztIcKd
+
+TKPQC5UCXNMVH2PZ

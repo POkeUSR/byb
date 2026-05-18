@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Chart Check</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: rgba(0, 18, 20, 0.86);
+            --panel-strong: rgba(0, 12, 14, 0.96);
+            --accent: #00f3ff;
+            --accent-soft: rgba(0, 243, 255, 0.16);
+            --text: #e7fbff;
+            --muted: #82959c;
+            --border: rgba(0, 243, 255, 0.22);
+            --success: #00ff9d;
+            --warning: #eab308;
+            --error: #ff4d5e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            background:
+                linear-gradient(120deg, rgba(0, 243, 255, 0.08), rgba(0, 255, 157, 0.045), rgba(234, 179, 8, 0.035)),
+                radial-gradient(circle at 18% 10%, rgba(0, 243, 255, 0.09), transparent 28rem),
+                radial-gradient(circle at 82% 0%, rgba(0, 255, 157, 0.06), transparent 22rem),
+                var(--bg);
+            background-size: 260% 260%, auto, auto, auto;
+            font-family: Consolas, "JetBrains Mono", monospace;
+            animation: bgShift 24s ease-in-out infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { background-position: 0% 50%, center, center, center; }
+            50% { background-position: 100% 50%, center, center, center; }
+        }
+
+        .wrap {
+            width: min(1360px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 24px 0 42px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            font-size: clamp(24px, 4vw, 42px);
+            line-height: 1;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            box-shadow: 0 0 26px rgba(0, 243, 255, 0.08);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: minmax(180px, 280px) 1fr auto;
+            gap: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        input, button {
+            min-height: 44px;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.32);
+            color: var(--text);
+            font: inherit;
+        }
+
+        input {
+            width: 100%;
+            padding: 0 12px;
+            text-transform: uppercase;
+        }
+
+        button {
+            padding: 0 18px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        button.primary {
+            border-color: rgba(0, 255, 157, 0.46);
+            background: rgba(0, 255, 157, 0.14);
+            color: var(--success);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.42;
+        }
+
+        .paste-zone {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            border: 1px dashed rgba(0, 243, 255, 0.38);
+            background: rgba(0, 0, 0, 0.22);
+        }
+
+        .next {
+            color: var(--warning);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .slot {
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .slot-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-strong);
+        }
+
+        .tf {
+            font-size: 20px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .state {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .state.ready {
+            color: var(--success);
+        }
+
+        .preview {
+            flex: 1;
+            min-height: 230px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.28);
+        }
+
+        .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .empty {
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+            padding: 18px;
+        }
+
+        .result {
+            padding: 14px;
+            line-height: 1.55;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .result-title {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .badge {
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.28);
+            padding: 6px 8px;
+            color: var(--accent);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge.warn { color: var(--warning); }
+        .badge.ok { color: var(--success); }
+        .badge.error { color: var(--error); }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .summary-card,
+        .field-card {
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.24);
+            padding: 12px;
+        }
+
+        .label {
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .value {
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .fields-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .reasons {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .raw-json {
+            margin-top: 14px;
+            max-height: 260px;
+            overflow: auto;
+            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.32);
+            padding: 12px;
+            white-space: pre-wrap;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .error {
+            color: var(--error);
+        }
+
+        .ok {
+            color: var(--success);
+        }
+
+        @media (max-width: 920px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .summary-grid,
+            .fields-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-header {
+                flex-direction: column;
+            }
+
+            .badges {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <div class="topbar">
+            <div>
+                <h1>Visual Chart Check</h1>
+                <p class="sub">Paste TradingView screenshots by order: 5m, 15m, 1h. PNG files are saved before GPT analysis.</p>
+            </div>
+            <a href="/">Dashboard</a>
+        </div>
+
+        <section class="panel controls">
+            <input id="symbol" placeholder="SYMBOL, e.g. PEPEUSDT" autocomplete="off">
+            <div class="paste-zone" id="pasteZone">
+                <span>Click here, then press Ctrl+V after each TradingView screenshot.</span>
+                <span class="next" id="nextSlot">Next: 5m.png</span>
+            </div>
+            <button class="primary" id="analyzeBtn" disabled>Analyze</button>
+        </section>
+
+        <section class="grid">
+            <article class="panel slot" data-timeframe="5m">
+                <div class="slot-head">
+                    <span class="tf">5m</span>
+                    <span class="state">waiting</span>
+                </div>
+                <div class="preview"><span class="empty">Paste first screenshot</span></div>
+            </article>
+            <article class="panel slot" data-timeframe="15m">
+                <div class="slot-head">
+                    <span class="tf">15m</span>
+                    <span class="state">waiting</span>
+                </div>
+                <div class="preview"><span class="empty">Paste second screenshot</span></div>
+            </article>
+            <article class="panel slot" data-timeframe="1h">
+                <div class="slot-head">
+                    <span class="tf">1h</span>
+                    <span class="state">waiting</span>
+                </div>
+                <div class="preview"><span class="empty">Paste third screenshot</span></div>
+            </article>
+        </section>
+
+        <section class="panel result" id="result">Result will appear here after analysis.</section>
+    </main>
+
+    <script>
+        const timeframes = ['5m', '15m', '1h'];
+        const images = {};
+        const symbolInput = document.getElementById('symbol');
+        const pasteZone = document.getElementById('pasteZone');
+        const nextSlot = document.getElementById('nextSlot');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const result = document.getElementById('result');
+        const initialSymbol = new URLSearchParams(window.location.search).get('symbol');
+        if (initialSymbol) {
+            symbolInput.value = initialSymbol.toUpperCase();
+        }
+
+        function nextTimeframe() {
+            return timeframes.find(tf => !images[tf]);
+        }
+
+        function updateState() {
+            const next = nextTimeframe();
+            nextSlot.textContent = next ? `Next: ${next}.png` : 'All screenshots ready';
+            analyzeBtn.disabled = Boolean(next) || !symbolInput.value.trim();
+        }
+
+        function setSlot(timeframe, dataUrl) {
+            images[timeframe] = dataUrl;
+            const slot = document.querySelector(`[data-timeframe="${timeframe}"]`);
+            const preview = slot.querySelector('.preview');
+            const state = slot.querySelector('.state');
+            preview.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.alt = `${timeframe} TradingView screenshot`;
+            preview.appendChild(img);
+            state.textContent = `${timeframe}.png ready`;
+            state.classList.add('ready');
+            updateState();
+        }
+
+        function readImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function parseAnalysis(text) {
+            const cleaned = String(text || '').trim()
+                .replace(/^```json\s*/i, '')
+                .replace(/^```\s*/i, '')
+                .replace(/```$/i, '')
+                .trim();
+            try {
+                return JSON.parse(cleaned);
+            } catch {
+                const start = cleaned.indexOf('{');
+                const end = cleaned.lastIndexOf('}');
+                if (start >= 0 && end > start) {
+                    return JSON.parse(cleaned.slice(start, end + 1));
+                }
+                throw new Error('GPT returned non-JSON analysis');
+            }
+        }
+
+        function badgeClass(value) {
+            const normalized = String(value || '').toUpperCase();
+            if (['CONFIRMED', 'LOW', 'A'].includes(normalized)) return 'ok';
+            if (['REJECTED', 'HIGH', 'C'].includes(normalized)) return 'error';
+            return 'warn';
+        }
+
+        function listItems(value) {
+            const items = Array.isArray(value) ? value : [value].filter(Boolean);
+            return items.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+        }
+
+        function renderAnalysis(rawText) {
+            const parsed = parseAnalysis(rawText);
+            const summaryRu = parsed.summary_ru || parsed.summary || 'Нет русского описания.';
+            const summaryEn = parsed.summary_en || parsed.summary || 'No English summary.';
+            result.innerHTML = `
+                <div class="result-header">
+                    <div>
+                        <h2 class="result-title">${escapeHtml(parsed.symbol || symbolInput.value || 'SYMBOL')}</h2>
+                        <div class="label">GPT Visual Analysis</div>
+                    </div>
+                    <div class="badges">
+                        <span class="badge ${badgeClass(parsed.visual_status)}">Status: ${escapeHtml(parsed.visual_status || 'N/A')}</span>
+                        <span class="badge ${badgeClass(parsed.entry_quality)}">Quality: ${escapeHtml(parsed.entry_quality || 'N/A')}</span>
+                        <span class="badge ${badgeClass(parsed.risk)}">Risk: ${escapeHtml(parsed.risk || 'N/A')}</span>
+                    </div>
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="label">Summary RU</div>
+                        <div class="value">${escapeHtml(summaryRu)}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">Summary EN</div>
+                        <div class="value">${escapeHtml(summaryEn)}</div>
+                    </div>
+                </div>
+                <div class="fields-grid">
+                    <div class="field-card">
+                        <div class="label">5m Trend</div>
+                        <div class="value">${escapeHtml(parsed.trend_5m || 'N/A')}</div>
+                    </div>
+                    <div class="field-card">
+                        <div class="label">15m Trend</div>
+                        <div class="value">${escapeHtml(parsed.trend_15m || 'N/A')}</div>
+                    </div>
+                    <div class="field-card">
+                        <div class="label">1h Trend</div>
+                        <div class="value">${escapeHtml(parsed.trend_1h || 'N/A')}</div>
+                    </div>
+                </div>
+                <div class="summary-grid">
+                    <div class="field-card">
+                        <div class="label">Reasons</div>
+                        <ul class="value reasons">${listItems(parsed.reasons)}</ul>
+                    </div>
+                    <div class="field-card">
+                        <div class="label">Next Action</div>
+                        <div class="value">${escapeHtml(parsed.next_action || 'N/A')}</div>
+                        <div class="label" style="margin-top: 12px;">Invalid If</div>
+                        <div class="value">${escapeHtml(parsed.invalid_if || 'N/A')}</div>
+                    </div>
+                </div>
+                <details>
+                    <summary class="label">Raw JSON</summary>
+                    <pre class="raw-json">${escapeHtml(JSON.stringify(parsed, null, 2))}</pre>
+                </details>
+            `;
+        }
+
+        document.addEventListener('paste', async event => {
+            const timeframe = nextTimeframe();
+            if (!timeframe) {
+                result.textContent = 'All three screenshots are already loaded. Press Analyze  or refresh the page.';
+                return;
+            }
+
+            const items = Array.from(event.clipboardData?.items || []);
+            const imageItem = items.find(item => item.type === 'image/png' || item.type.startsWith('image/'));
+            if (!imageItem) {
+                result.innerHTML = '<span class="error">Clipboard does not contain an image.</span>';
+                return;
+            }
+
+            event.preventDefault();
+            const file = imageItem.getAsFile();
+            const dataUrl = await readImage(file);
+            if (!dataUrl.startsWith('data:image/png;base64,')) {
+                result.innerHTML = '<span class="error">Please paste PNG screenshots. Use Windows screenshot clipboard or save as PNG.</span>';
+                return;
+            }
+
+            setSlot(timeframe, dataUrl);
+            result.innerHTML = `<span class="ok">${timeframe}.png accepted.</span>`;
+        });
+
+        symbolInput.addEventListener('input', updateState);
+        pasteZone.addEventListener('click', () => pasteZone.focus());
+        pasteZone.tabIndex = 0;
+
+        analyzeBtn.addEventListener('click', async () => {
+            const symbol = symbolInput.value.trim().toUpperCase();
+            if (!symbol) {
+                result.innerHTML = '<span class="error">Enter symbol first.</span>';
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = 'Analyzing...';
+            result.textContent = 'Sending 5m, 15m and 1h screenshots to GPT...';
+
+            try {
+                const response = await fetch('/api/visual-check/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, images })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                renderAnalysis(data.analysis || JSON.stringify(data, null, 2));
+            } catch (error) {
+                result.innerHTML = `<span class="error">${error.message}</span>`;
+            } finally {
+                analyzeBtn.textContent = 'Analyze';
+                updateState();
+            }
+        });
+
+        updateState();
+    </script>
+</body>
+</html>

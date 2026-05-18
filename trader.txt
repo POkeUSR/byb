@@ -1,0 +1,258 @@
+BYBIT SPOT SCANNER - PROFESSIONAL TRADER GUIDE
+
+Purpose
+-------
+This scanner is a real-time decision support tool for spot traders.
+
+It is not a buy/sell bot.
+It is not a prediction system.
+It is an early movement scanner that helps a trader quickly find coins where market behavior changes before the move becomes obvious.
+
+The scanner is designed to answer one practical question:
+
+"Which coins deserve immediate chart review right now?"
+
+
+Core Data Flow
+--------------
+The system listens to live Bybit Spot market streams.
+
+For every active symbol it receives:
+- live price updates;
+- trade prints;
+- short-term volume;
+- bid/ask depth;
+- orderbook imbalance;
+- historical price and volume lists;
+- relative behavior versus BTC.
+
+The internal flow is:
+
+market data
+-> realtime metrics
+-> score calculation
+-> raw signal
+-> market context
+-> structure/risk classification
+-> alert card
+-> optional visual chart analysis
+
+
+What The Score Means
+--------------------
+Score is the scanner's estimate of abnormal short-term activity.
+
+It is not a direct entry signal.
+It means that the coin is behaving differently from its recent baseline.
+
+Score is influenced by:
+- volume anomaly;
+- relative strength versus BTC;
+- squeeze or compression;
+- absorption signs;
+- short-term price behavior;
+- bid/ask depth context.
+
+Professional interpretation:
+
+Low score:
+Market is close to normal behavior. Usually no action.
+
+Medium score:
+There is activity. Put the coin on watch and check structure.
+
+High score:
+The coin deserves immediate chart review.
+
+Very high score:
+The coin may be entering an active momentum phase, but this also increases trap risk.
+
+
+Signal Card Fields
+------------------
+Score
+Current strength of the scanner signal.
+
+Tier
+Setup quality classification:
+- A-TIER: strong structure and better continuation profile;
+- B-TIER: acceptable but imperfect setup;
+- C-TIER: weak, noisy, or low-quality setup.
+
+Status
+Signal lifecycle:
+- RAW: early signal, not confirmed yet;
+- CONFIRMED: post-signal behavior supports continuation;
+- FAILED: continuation did not appear;
+- TRAP: rejection or fake momentum behavior detected.
+
+Risk
+Dynamic risk estimate:
+- LOW: cleaner structure, lower trap signs;
+- MEDIUM: mixed or volatile structure;
+- HIGH: unstable price action, exhaustion, or trap probability.
+
+Trap
+Probability that the move is a false momentum event.
+High trap probability means the move may already be extended or rejected.
+
+Context
+Market and structure interpretation:
+- broader market state;
+- relative strength;
+- breakout quality;
+- structure status;
+- explanation of the classification.
+
+
+How To Use Alerts Professionally
+--------------------------------
+Do not enter only because an alert appeared.
+
+The alert is a filter.
+The chart is the decision surface.
+
+Recommended workflow:
+
+1. Watch the high-score section first.
+2. Open the TradingView chart.
+3. Check 5m, 15m, and 1h.
+4. Identify the local range.
+5. Mark support and resistance.
+6. Check whether the move has continuation volume.
+7. Check whether price is already extended.
+8. Use visual-check for strong or unclear signals.
+9. Decide only after structure confirms the idea.
+
+
+5m / 15m / 1h Interpretation
+----------------------------
+5m
+Shows the immediate trigger.
+Useful for impulse, rejection, retest, and entry timing.
+
+15m
+Shows whether the move has real continuation.
+This timeframe is usually more important than 5m for avoiding noise.
+
+1h
+Shows broader context.
+If price is directly under 1h resistance, a strong 5m signal may still be risky.
+
+
+Good Spot Setup
+---------------
+A better long setup usually has:
+
+- high score;
+- A-TIER or strong B-TIER;
+- LOW or MEDIUM risk;
+- low trap probability;
+- price breaking or reclaiming an important level;
+- volume continuing after the first impulse;
+- 15m confirming the move;
+- 1h not blocking price with nearby resistance;
+- visual-check result CONFIRMED or WAIT with a clear trigger.
+
+
+Weak Or Dangerous Setup
+-----------------------
+Avoid or downgrade the signal when:
+
+- price already pumped vertically;
+- there is a long upper wick;
+- volume spike appears without continuation;
+- price rejects resistance;
+- 15m does not confirm;
+- 1h is bearish or under strong resistance;
+- trap probability is high;
+- visual-check says REJECTED.
+
+
+Visual Check
+------------
+Visual-check is a manual GPT-assisted chart review.
+
+It analyzes screenshots from:
+- 5m;
+- 15m;
+- 1h.
+
+It returns:
+- visual status;
+- entry quality;
+- risk;
+- timeframe trends;
+- Russian and English summary;
+- reasons;
+- invalidation condition;
+- next action.
+
+Visual status:
+
+CONFIRMED
+The chart structure supports the scanner signal.
+
+WAIT
+The signal is interesting, but the chart still needs confirmation.
+
+REJECTED
+The chart does not support a quality entry.
+
+
+Professional Decision Rule
+--------------------------
+The best signal is not the highest score.
+
+The best signal is the one where:
+
+scanner activity
++ market context
++ price structure
++ volume continuation
++ risk control
+
+all point in the same direction.
+
+
+Practical Entry Logic For Spot
+------------------------------
+A practical spot trader can use this sequence:
+
+1. Alert appears.
+2. Check if score is high enough.
+3. Check Tier and Risk.
+4. Open TradingView.
+5. Find the level that price must hold.
+6. Wait for breakout, retest, or continuation volume.
+7. Avoid buying into vertical candles.
+8. Define invalidation before entry.
+9. Use smaller position if risk is MEDIUM.
+10. Skip if structure is unclear.
+
+
+What To Do With WAIT
+--------------------
+WAIT is not negative.
+
+It means:
+- the coin is interesting;
+- the scanner found activity;
+- but the chart has not confirmed a clean entry yet.
+
+Common WAIT conditions:
+- wait for retest;
+- wait for volume continuation;
+- wait for candle close above resistance;
+- wait for 15m confirmation;
+- wait for BTC/market stability.
+
+
+Final Principle
+---------------
+The scanner finds attention.
+The chart confirms structure.
+The trader controls risk.
+
+Never treat an alert as a command.
+Treat it as a professional watchlist trigger.

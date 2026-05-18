@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bybit Crypto Scanner Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&family=Unbounded:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: rgba(0, 18, 20, 0.82);
+            --panel-strong: rgba(0, 12, 14, 0.92);
+            --accent: #00f3ff;
+            --accent-dim: rgba(0, 243, 255, 0.28);
+            --text: #e0e0e0;
+            --muted: #7c8b91;
+            --border: rgba(0, 243, 255, 0.22);
+            --error: #ff3e3e;
+            --warning: #eab308;
+            --success: #00ff9d;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background:
+                linear-gradient(120deg, rgba(0, 243, 255, 0.08), rgba(0, 255, 157, 0.045), rgba(234, 179, 8, 0.035), rgba(0, 243, 255, 0.06)),
+                radial-gradient(circle at 20% 10%, rgba(0, 243, 255, 0.08), transparent 28rem),
+                radial-gradient(circle at 80% 0%, rgba(0, 255, 157, 0.05), transparent 22rem),
+                var(--bg);
+            background-size: 260% 260%, auto, auto, auto;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            animation: soft-gradient-shift 28s ease-in-out infinite;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 243, 255, 0.35);
+            border: 2px solid #050505;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Unbounded', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.14) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.012), rgba(0, 0, 255, 0.03));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .glass-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.03), 0 18px 56px rgba(0, 0, 0, 0.28);
+            contain: layout paint;
+        }
+
+        .terminal-label {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 0.25rem 0.75rem;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            background: rgba(0, 243, 255, 0.04);
+        }
+
+        .metric-value {
+            color: var(--accent);
+            font-weight: 800;
+        }
+
+        .neo-btn {
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            background: transparent;
+            text-transform: uppercase;
+            transition: 0.2s ease;
+        }
+
+        .neo-btn:hover {
+            background: var(--accent);
+            color: #001011;
+            box-shadow: 0 0 18px var(--accent-dim);
+        }
+
+        .neo-chip {
+            border: 1px solid var(--border);
+            background: rgba(0, 243, 255, 0.06);
+            color: var(--accent);
+            text-transform: uppercase;
+            min-height: 22px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 0.7rem;
+            height: 0.7rem;
+            display: inline-block;
+            border-radius: 999px;
+            box-shadow: 0 0 14px currentColor;
+        }
+
+        .score-track {
+            background: rgba(255, 255, 255, 0.08);
+            height: 0.25rem;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            box-shadow: 0 0 14px currentColor;
+            transition: width 0.18s ease;
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(8px);
+        }
+
+        .alerts-scroll {
+            max-height: min(74vh, 820px);
+            overflow-y: auto;
+            padding-right: 0.25rem;
+            scroll-behavior: smooth;
+        }
+
+        .alert-card {
+            min-height: 214px;
+            content-visibility: auto;
+            contain-intrinsic-size: 240px;
+        }
+
+        .price-cell {
+            min-height: 64px;
+        }
+
+        .truncate-soft {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .loading-pulse {
+            animation: pulse-opacity 1.4s ease-in-out infinite;
+        }
+
+        .boot-progress {
+            height: 4px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .boot-progress-fill {
+            height: 100%;
+            width: 8%;
+            background: var(--warning);
+            box-shadow: 0 0 14px rgba(234, 179, 8, 0.55);
+            transition: width 0.4s ease;
+        }
+
+        @keyframes soft-gradient-shift {
+            0%, 100% { background-position: 0% 50%, center, center, center; }
+            50% { background-position: 100% 50%, center, center, center; }
+        }
+
+        .card-details > summary {
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .card-details > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .card-details[open] > summary {
+            color: var(--accent);
+        }
+
+        .tier-a { color: var(--success); }
+        .tier-b { color: var(--warning); }
+        .tier-c { color: var(--error); }
+
+        @keyframes pulse-opacity {
+            0%, 100% { opacity: 0.55; }
+            50% { opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+            .glass-panel {
+                backdrop-filter: blur(6px);
+                box-shadow: 0 0 0 1px rgba(0, 243, 255, 0.03), 0 16px 48px rgba(0, 0, 0, 0.28);
+            }
+
+            .alerts-scroll {
+                max-height: none;
+                overflow-y: visible;
+                padding-right: 0;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            body { animation: none; }
+            .score-fill { transition: none; }
+        }
+    </style>
+</head>
+<body>
+    <main class="relative z-10 mx-auto max-w-[1500px] px-3 py-4 sm:px-4 lg:px-6">
+        <section id="high-alerts-section" class="mb-6 hidden">
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-sm text-[var(--warning)]">High Alerts</h2>
+                    <p class="mt-1 text-[10px] uppercase text-[var(--muted)]">Priority setups with score above 80</p>
+                </div>
+                <span id="high-alert-count" class="terminal-label border-[var(--warning)] text-[var(--warning)]">0 active</span>
+            </div>
+            <div id="high-alerts-grid" class="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3"></div>
+        </section>
+
+        <section id="loading-alert" class="glass-panel mb-6 border-l-2 border-l-[var(--warning)] p-4">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-sm text-[var(--warning)]">Updating market data</h2>
+                    <p class="mt-2 text-xs text-[var(--muted)]">Connecting to live stream and waiting for the first signals.</p>
+                </div>
+                <div class="loading-pulse text-xs font-bold uppercase text-[var(--warning)]">
+                    <span id="boot-progress-label">0%</span> syncing...
+                </div>
+            </div>
+            <div class="boot-progress mt-4">
+                <div id="boot-progress-fill" class="boot-progress-fill"></div>
+            </div>
+        </section>
+
+        <section>
+            <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-sm text-white">Signals</h2>
+                    <p class="mt-1 text-[10px] uppercase text-[var(--muted)]">Live enriched alerts from scanner_alerts</p>
+                </div>
+                <span id="alert-count" class="terminal-label">0 active</span>
+            </div>
+            <div class="alerts-scroll">
+                <div id="alerts-grid" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"></div>
+            </div>
+        </section>
+
+        <footer class="mt-6">
+            <section id="status-bar" class="glass-panel border-l-2 border-l-[var(--accent)] px-3 py-2 text-[10px] uppercase">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <span class="text-[var(--accent)]">BYBIT_SPOT_SCANNER_V1</span>
+                    <span class="text-[var(--muted)]">Scanner Dashboard</span>
+                    <span class="text-[var(--muted)]">Sync: <span id="last-update" class="metric-value">Never</span></span>
+                    <span class="inline-flex items-center gap-1 text-[var(--muted)]">Streamer <span id="status-streamer" class="status-dot text-[var(--error)]"></span></span>
+                    <span class="inline-flex items-center gap-1 text-[var(--muted)]">Engine <span id="status-engine" class="status-dot text-[var(--error)]"></span></span>
+                    <span class="inline-flex items-center gap-1 text-[var(--muted)]">Redis <span id="status-redis" class="status-dot text-[var(--error)]"></span></span>
+                    <span class="text-[var(--muted)]">Msgs/s: <span id="msgs-sec" class="metric-value">0</span></span>
+                    <span class="text-[var(--muted)]">Loop: <span id="loop-latency" class="metric-value">0</span>ms</span>
+                    <span class="text-[var(--muted)]">Uptime: <span id="uptime" class="metric-value">0</span>s</span>
+                    <a class="neo-btn px-3 py-2 text-[10px] font-bold" href="/health-report" target="_blank" rel="noopener">health</a>
+                    <a class="neo-btn px-3 py-2 text-[10px] font-bold" href="/trader-description" target="_blank" rel="noopener">description</a>
+                    <a class="neo-btn px-3 py-2 text-[10px] font-bold" href="https://t.me/pokeusr" target="_blank" rel="noopener">contact</a>
+                </div>
+            </section>
+        </footer>
+    </main>
+
+    <div id="details-modal" class="modal-backdrop fixed inset-0 z-40 hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md border-t-2 border-t-[var(--accent)] p-6">
+            <h2 id="modal-symbol" class="mb-5 text-lg text-white"></h2>
+            <div class="space-y-4 text-xs">
+                <div>
+                    <div class="mb-2 flex justify-between text-[var(--muted)]"><span>Z-SCORE</span></div>
+                    <div class="score-track"><div id="z-score-bar" class="score-fill bg-[var(--accent)]" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="mb-2 flex justify-between text-[var(--muted)]"><span>SQUEEZE</span></div>
+                    <div class="score-track"><div id="squeeze-bar" class="score-fill bg-[var(--success)]" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="mb-2 flex justify-between text-[var(--muted)]"><span>ABSORPTION</span></div>
+                    <div class="score-track"><div id="absorption-bar" class="score-fill bg-[var(--warning)]" style="width: 0%"></div></div>
+                </div>
+                <div>
+                    <div class="mb-2 flex justify-between text-[var(--muted)]"><span>RELATIVE_STRENGTH</span></div>
+                    <div class="score-track"><div id="rs-bar" class="score-fill bg-[var(--accent)]" style="width: 0%"></div></div>
+                </div>
+            </div>
+            <button onclick="closeModal()" class="neo-btn mt-6 w-full px-4 py-3 text-xs font-bold">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8000/ws');
+        const alertsGrid = document.getElementById('alerts-grid');
+        const highAlertsSection = document.getElementById('high-alerts-section');
+        const highAlertsGrid = document.getElementById('high-alerts-grid');
+        const alertCount = document.getElementById('alert-count');
+        const highAlertCount = document.getElementById('high-alert-count');
+        const loadingAlert = document.getElementById('loading-alert');
+        const bootProgressFill = document.getElementById('boot-progress-fill');
+        const bootProgressLabel = document.getElementById('boot-progress-label');
+        const alertCards = {}; // Store cards by symbol
+        const highAlertCards = {};
+        const priceCells = {};
+        const maxAlertCards = 30;
+        const maxHighAlertCards = 12;
+        let lastStatusRender = 0;
+        let hasInitialData = false;
+        let bootProgress = 0;
+        const heartbeatHealthySeconds = 120;
+        const bootProgressTimer = setInterval(() => {
+            if (hasInitialData) return;
+            bootProgress = Math.min(92, bootProgress + Math.max(1, Math.round((92 - bootProgress) * 0.08)));
+            if (bootProgressFill) bootProgressFill.style.width = `${bootProgress}%`;
+            if (bootProgressLabel) bootProgressLabel.textContent = `${bootProgress}%`;
+        }, 700);
+
+        function hideLoadingAlert() {
+            if (!hasInitialData && loadingAlert) {
+                hasInitialData = true;
+                clearInterval(bootProgressTimer);
+                if (bootProgressFill) bootProgressFill.style.width = '100%';
+                if (bootProgressLabel) bootProgressLabel.textContent = '100%';
+                loadingAlert.classList.add('hidden');
+            }
+        }
+
+        // Beep sound for high score alerts
+        function playBeep(repeats = 1) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                for (let i = 0; i < repeats; i++) {
+                    const start = audioContext.currentTime + i * 0.22;
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.setValueAtTime(0.001, start);
+                    gainNode.gain.exponentialRampToValueAtTime(0.28, start + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, start + 0.11);
+                    oscillator.start(start);
+                    oscillator.stop(start + 0.12);
+                }
+            } catch (error) {
+                console.debug('Audio alert unavailable:', error);
+            }
+        }
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'system_status') {
+                updateStatusBar(data);
+            } else {
+                const { symbol, score, reasoning, price, timestamp, debug } = data;
+
+                if (score > 80) {
+                    playBeep(3);
+                }
+
+                if (alertCards[symbol]) {
+                    // Update existing card
+                    updateCard(symbol, data);
+                } else {
+                    // Create new card
+                    createCard(data);
+                }
+
+                if (score > 80) {
+                    upsertHighAlert(data);
+                }
+                hideLoadingAlert();
+
+                // Log debug info
+                if (debug) {
+                    console.log(`Debug for ${symbol}:`, debug);
+                }
+            }
+        };
+
+        function scoreClass(score) {
+            if (score > 90) return 'bg-[var(--success)] text-[var(--success)]';
+            if (score > 80) return 'bg-[var(--warning)] text-[var(--warning)]';
+            return 'bg-[var(--error)] text-[var(--error)]';
+        }
+
+        function formatPrice(price) {
+            const value = Number(price);
+            if (!Number.isFinite(value)) return String(price);
+            const decimals = value < 0.01 ? 8 : value < 1 ? 5 : value < 10 ? 4 : 2;
+            return value.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        function toNumber(value, fallback = 0) {
+            const number = Number(value);
+            return Number.isFinite(number) ? number : fallback;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function tierClass(tier) {
+            if (tier === 'A-TIER') return 'tier-a';
+            if (tier === 'B-TIER') return 'tier-b';
+            return 'tier-c';
+        }
+
+        function updateCounts() {
+            if (alertCount) alertCount.textContent = `${alertsGrid.children.length} active`;
+            if (highAlertCount) highAlertCount.textContent = `${highAlertsGrid.children.length} active`;
+        }
+
+        function renderCardContent(data) {
+            const { symbol, score, price, timestamp } = data;
+            const reasoning = Array.isArray(data.reasoning) ? data.reasoning : [];
+            const intel = data.intelligence || {};
+            const market = intel.market_context || {};
+            const structure = intel.structure || {};
+            const scoreColor = scoreClass(score);
+            const numericScore = toNumber(score);
+            const tier = intel.tier || 'N/A';
+            const signalStatus = intel.signal_status || 'RAW';
+            const riskLevel = intel.risk_level || 'N/A';
+            const trapProbability = intel.trap_probability ?? 'N/A';
+            return `
+                <div class="mb-3 flex items-start justify-between gap-3 border-b border-[var(--border)] pb-3">
+                    <div class="min-w-0">
+                        <h2 class="truncate-soft text-base font-bold text-white">${escapeHtml(symbol)}</h2>
+                        <p class="mt-1 text-[10px] uppercase text-[var(--muted)]">Updated: ${new Date(timestamp).toLocaleString()}</p>
+                    </div>
+                    <div class="border border-[var(--border)] bg-black/40 px-3 py-2 text-right">
+                        <div class="text-[10px] text-[var(--muted)]">SCORE</div>
+                        <div class="text-lg font-bold ${scoreColor.split(' ')[1]}">${escapeHtml(score)}</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="mb-2 flex justify-between text-[10px] uppercase text-[var(--muted)]">
+                        <span>SIGNAL_SCORE</span>
+                        <span>${escapeHtml(score)}%</span>
+                    </div>
+                    <div class="score-track">
+                        <div class="score-fill ${scoreColor.split(' ')[0]}" style="width: ${Math.min(numericScore, 100)}%"></div>
+                    </div>
+                </div>
+                <div class="mb-3 flex flex-wrap gap-2">
+                    ${reasoning.length ? reasoning.map(r => `<span class="neo-chip px-2 py-1 text-[10px]">${escapeHtml(r)}</span>`).join('') : '<span class="neo-chip px-2 py-1 text-[10px]">NO_TAGS</span>'}
+                </div>
+                <div class="mb-3 grid grid-cols-4 gap-2 text-[10px] uppercase">
+                    <div class="border border-[var(--border)] bg-black/30 p-2">
+                        <div class="text-[var(--muted)]">Tier</div>
+                        <div class="font-bold ${tierClass(tier)}">${escapeHtml(tier)}</div>
+                    </div>
+                    <div class="border border-[var(--border)] bg-black/30 p-2">
+                        <div class="text-[var(--muted)]">Status</div>
+                        <div class="metric-value truncate-soft">${escapeHtml(signalStatus)}</div>
+                    </div>
+                    <div class="border border-[var(--border)] bg-black/30 p-2">
+                        <div class="text-[var(--muted)]">Risk</div>
+                        <div class="metric-value">${escapeHtml(riskLevel)}</div>
+                    </div>
+                    <div class="border border-[var(--border)] bg-black/30 p-2">
+                        <div class="text-[var(--muted)]">Trap</div>
+                        <div class="metric-value">${escapeHtml(trapProbability)}</div>
+                    </div>
+                </div>
+                <details class="card-details mb-3 border border-[var(--border)] bg-black/30 p-3 text-[10px]">
+                    <summary class="flex items-center justify-between uppercase text-[var(--muted)]">
+                        <span>Context</span>
+                        <span>open</span>
+                    </summary>
+                    <div class="mt-3 space-y-1">
+                        <div><span class="text-[var(--muted)]">MARKET:</span> <span class="metric-value">${escapeHtml(market.state || 'N/A')}</span></div>
+                        <div><span class="text-[var(--muted)]">STRUCTURE:</span> <span class="metric-value">${escapeHtml(structure.breakout_status || 'N/A')}</span></div>
+                        <div class="text-[var(--muted)]">${escapeHtml(intel.explanation || '')}</div>
+                    </div>
+                </details>
+                <div class="mb-3 border border-[var(--border)] bg-black/30 p-3 text-xs">
+                    <span class="text-[var(--muted)]">PRICE_USDT:</span>
+                    <span class="metric-value">${formatPrice(price)}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="neo-btn px-4 py-3 text-xs font-bold" onclick="openChart('${escapeHtml(symbol)}')">trading<b>view</b></button>
+                    <button class="neo-btn px-4 py-3 text-xs font-bold" onclick="openVisualCheck('${escapeHtml(symbol)}')">visual<b>check</b></button>
+                </div>
+            `;
+        }
+
+        function createCard(data) {
+            const { symbol } = data;
+            const card = document.createElement('div');
+            card.className = 'alert-card glass-panel border-l-2 border-l-[var(--accent)] p-4';
+            card.id = `card-${symbol}`;
+            card.innerHTML = renderCardContent(data);
+
+            if (alertsGrid.children.length >= maxAlertCards) {
+                const oldest = alertsGrid.lastElementChild;
+                if (oldest) {
+                    const oldestSymbol = oldest.id.replace('card-', '');
+                    delete alertCards[oldestSymbol];
+                    oldest.remove();
+                }
+            }
+            alertsGrid.prepend(card);
+            alertCards[symbol] = card;
+            updateCounts();
+        }
+
+        function updateCard(symbol, data) {
+            const card = alertCards[symbol];
+            card.innerHTML = renderCardContent(data);
+            alertsGrid.prepend(card);
+            updateCounts();
+        }
+
+        function upsertHighAlert(data) {
+            const { symbol } = data;
+            highAlertsSection.classList.remove('hidden');
+
+            if (highAlertCards[symbol]) {
+                highAlertCards[symbol].innerHTML = renderCardContent(data);
+                highAlertsGrid.prepend(highAlertCards[symbol]);
+                updateCounts();
+                return;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'alert-card glass-panel border-l-2 border-l-[var(--warning)] p-4';
+            card.id = `high-card-${symbol}`;
+            card.innerHTML = renderCardContent(data);
+
+            if (highAlertsGrid.children.length >= maxHighAlertCards) {
+                const oldest = highAlertsGrid.lastElementChild;
+                if (oldest) {
+                    const oldestSymbol = oldest.id.replace('high-card-', '');
+                    delete highAlertCards[oldestSymbol];
+                    oldest.remove();
+                }
+            }
+
+            highAlertsGrid.prepend(card);
+            highAlertCards[symbol] = card;
+            updateCounts();
+        }
+
+        function showDetails(symbol, data) {
+            document.getElementById('modal-symbol').textContent = symbol;
+            const debug = data.debug;
+            if (debug && debug.raw_values) {
+                const raw = debug.raw_values;
+                // Calculate contributions (assuming equal weights)
+                const zScore = raw.z_score ? Math.min(Math.abs(raw.z_score) * 25, 25) : 0;
+                const squeeze = raw.squeeze ? 25 : 0;
+                const absorption = raw.absorption === 'Bullish' ? 25 : 0;
+                const rs = raw.relative_strength ? Math.min((raw.relative_strength + 1) * 12.5, 25) : 0;
+
+                document.getElementById('z-score-bar').style.width = `${zScore}%`;
+                document.getElementById('squeeze-bar').style.width = `${squeeze}%`;
+                document.getElementById('absorption-bar').style.width = `${absorption}%`;
+                document.getElementById('rs-bar').style.width = `${rs}%`;
+            }
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        function openChart(symbol) {
+            // Assume BYBIT exchange on TradingView
+            const url = `https://www.tradingview.com/chart/?symbol=BYBIT:${symbol}`;
+            window.open(url, '_blank');
+        }
+
+        function openVisualCheck(symbol) {
+            const url = `/visual-check?symbol=${encodeURIComponent(symbol)}`;
+            window.open(url, '_blank');
+        }
+
+        ws.onopen = function() {
+            console.log('Connected to WebSocket');
+        };
+
+        function updateStatusBar(data) {
+            const renderNow = performance.now();
+            if (renderNow - lastStatusRender < 900) return;
+            lastStatusRender = renderNow;
+
+            const now = Date.now() / 1000;
+            const heartbeats = data.heartbeats;
+            const metrics = data.metrics;
+            const prices = data.prices || {};
+
+            // Update status dots
+            const streamerTs = heartbeats['Streamer'];
+            const streamerEl = document.getElementById('status-streamer');
+            streamerEl.className = streamerTs && now - streamerTs < heartbeatHealthySeconds ? 'status-dot text-[var(--success)]' : 'status-dot text-[var(--error)]';
+
+            const engineTs = heartbeats['Engine'];
+            const engineEl = document.getElementById('status-engine');
+            engineEl.className = engineTs && now - engineTs < heartbeatHealthySeconds ? 'status-dot text-[var(--success)]' : 'status-dot text-[var(--error)]';
+
+            const redisEl = document.getElementById('status-redis');
+            redisEl.className = data.redis_status === 'alive' ? 'status-dot text-[var(--success)]' : 'status-dot text-[var(--error)]';
+
+            // Update metrics
+            document.getElementById('msgs-sec').textContent = metrics['msgs_per_sec'] || '0';
+            document.getElementById('loop-latency').textContent = toNumber(metrics['loop_latency_ms']).toFixed(2);
+            document.getElementById('uptime').textContent = Math.floor(toNumber(data.uptime));
+            document.getElementById('last-update').textContent = new Date(toNumber(data.last_update) * 1000).toLocaleTimeString();
+
+            // Update prices
+            updatePrices(prices);
+        }
+
+        function updatePrices(prices) {
+            const pricesList = document.getElementById('prices-list');
+            if (!pricesList) return;
+            Object.entries(prices).forEach(([symbol, price]) => {
+                const formatted = formatPrice(price);
+                if (!priceCells[symbol]) {
+                    const div = document.createElement('div');
+                    div.className = 'price-cell border border-[var(--border)] bg-black/30 p-3';
+                    div.innerHTML = `
+                        <div class="truncate-soft text-[10px] font-bold uppercase text-white">${symbol.replace('USDT', '')}</div>
+                        <div class="metric-value mt-1 text-sm" data-price="${symbol}">${formatted}</div>
+                    `;
+                    pricesList.appendChild(div);
+                    priceCells[symbol] = div.querySelector(`[data-price="${symbol}"]`);
+                } else if (priceCells[symbol].textContent !== formatted) {
+                    priceCells[symbol].textContent = formatted;
+                }
+            });
+        }
+
+        ws.onclose = function() {
+            console.log('WebSocket closed');
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
+    </script>
+</body>
+</html>

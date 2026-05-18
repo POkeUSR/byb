@@ -1,0 +1,219 @@
+BYBIT SPOT SCANNER - HUONG DAN CHO TRADER CHUYEN NGHIEP
+
+Muc dich
+--------
+Scanner nay la cong cu ho tro ra quyet dinh theo thoi gian thuc cho trader spot.
+
+No khong phai bot mua/ban.
+No khong phai he thong du doan.
+No la bo quet chuyen dong som, giup phat hien coin co hanh vi thi truong thay doi truoc khi bien dong gia tro nen qua ro rang.
+
+Cau hoi chinh:
+
+"Nhung coin nao dang xung dang duoc mo chart kiem tra ngay bay gio?"
+
+
+Logic cot loi
+-------------
+He thong lang nghe du lieu live tu Bybit Spot.
+
+Voi moi symbol, he thong phan tich:
+- gia live;
+- lenh khop;
+- volume ngan han;
+- do sau bid/ask;
+- boi canh orderbook;
+- lich su gia va volume;
+- suc manh tuong doi so voi BTC.
+
+Luon xu ly noi bo:
+
+du lieu thi truong
+-> realtime metrics
+-> tinh score
+-> raw signal
+-> market context
+-> phan loai cau truc va rui ro
+-> alert card
+-> visual chart analysis neu can
+
+
+Score co nghia la gi
+--------------------
+Score the hien muc do bat thuong cua hoat dong hien tai so voi hanh vi gan day cua coin.
+
+Score khong phai tin hieu vao lenh truc tiep.
+No co nghia la: coin nay can duoc kiem tra.
+
+Score bi anh huong boi:
+- volume bat thuong;
+- relative strength so voi BTC;
+- squeeze hoac compression;
+- dau hieu absorption;
+- hanh vi gia ngan han;
+- boi canh bid/ask.
+
+Cach hieu chuyen nghiep:
+
+Score thap:
+Thuong khong can hanh dong.
+
+Score trung binh:
+Co hoat dong. Dua vao watchlist.
+
+Score cao:
+Can mo chart kiem tra ngay.
+
+Score rat cao:
+Co the dang vao pha momentum, nhung trap risk cung cao hon.
+
+
+Alert Card
+----------
+Score
+Do manh cua tin hieu hien tai.
+
+Tier
+Chat luong setup:
+- A-TIER: cau truc manh;
+- B-TIER: chap nhan duoc nhung chua hoan hao;
+- C-TIER: yeu, nhieu nhieu, hoac rui ro.
+
+Status
+Vong doi tin hieu:
+- RAW: tin hieu som, chua xac nhan;
+- CONFIRMED: chuyen dong duoc xac nhan;
+- FAILED: khong co tiep dien;
+- TRAP: co the la fake move hoac bay momentum.
+
+Risk
+Danh gia rui ro dong:
+- LOW: cau truc sach hon;
+- MEDIUM: tinh huong lan lon;
+- HIGH: bat on, qua keo, hoac nguy hiem.
+
+Trap
+Xac suat day la chuyen dong momentum gia.
+
+Context
+Dien giai thi truong va cau truc:
+- trang thai thi truong;
+- relative strength;
+- chat luong breakout;
+- trang thai structure;
+- ly do he thong danh gia nhu vay.
+
+
+Workflow chuyen nghiep
+----------------------
+Khong vao lenh chi vi co alert.
+
+Alert la bo loc.
+Chart moi la noi ra quyet dinh.
+
+Quy trinh de xuat:
+
+1. Xem high-score signals truoc.
+2. Mo TradingView.
+3. Kiem tra 5m, 15m va 1h.
+4. Danh dau local range.
+5. Xac dinh support va resistance.
+6. Kiem tra volume co tiep dien khong.
+7. Tranh mua vao nen tang dung qua manh.
+8. Dung visual-check cho tin hieu manh hoac chua ro.
+9. Chi can nhac giao dich khi structure xac nhan y tuong.
+
+
+5m / 15m / 1h
+-------------
+5m
+Cho thay trigger gan nhat.
+
+15m
+Cho thay chuyen dong co tiep dien that khong.
+
+1h
+Cho thay boi canh lon hon. Neu gia o ngay duoi resistance 1h, tin hieu 5m van co the rui ro.
+
+
+Setup spot tot
+--------------
+Mot long setup tot thuong co:
+
+- score cao;
+- A-TIER hoac B-TIER manh;
+- LOW hoac MEDIUM risk;
+- trap probability thap;
+- breakout hoac reclaim mot level quan trong;
+- volume tiep dien sau impulse dau tien;
+- 15m xac nhan;
+- khong co resistance 1h qua gan;
+- visual-check = CONFIRMED hoac WAIT voi trigger ro rang.
+
+
+Setup yeu
+---------
+Nen ha uu tien hoac bo qua khi:
+
+- gia da pump thang dung;
+- co bong nen tren dai;
+- volume spike nhung khong tiep dien;
+- gia bi reject tai resistance;
+- 15m khong xac nhan;
+- 1h bearish hoac ngay duoi resistance;
+- trap cao;
+- visual-check = REJECTED.
+
+
+Visual Check
+------------
+Visual-check la buoc kiem tra chart thu cong voi GPT.
+
+No phan tich:
+- 5m;
+- 15m;
+- 1h.
+
+Ket qua gom:
+- visual status;
+- entry quality;
+- risk;
+- trend theo tung timeframe;
+- summary;
+- reasons;
+- invalidation;
+- next action.
+
+CONFIRMED
+Cau truc chart ung ho tin hieu scanner.
+
+WAIT
+Tin hieu dang quan tam nhung can doi xac nhan.
+
+REJECTED
+Cau truc khong ung ho mot entry chat luong.
+
+
+Quy tac ra quyet dinh
+---------------------
+Tin hieu tot nhat khong phai tin hieu co score cao nhat.
+
+Tin hieu tot nhat la noi:
+
+scanner activity
++ market context
++ price structure
++ volume continuation
++ risk control
+
+cung chi ve mot huong.
+
+
+Nguyen tac cuoi cung
+--------------------
+Scanner tim diem can chu y.
+Chart xac nhan structure.
+Trader kiem soat rui ro.
+
+Alert khong phai menh lenh.
+Alert la trigger cho watchlist chuyen nghiep.

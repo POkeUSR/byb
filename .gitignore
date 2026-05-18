@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.venv/
+venv/
+
+# Secrets
+.env
+
+# Runtime output
+*.log
+app_run.out.log
+app_run.err.log
+screenshots/
+
+# Local scratch files
+0
+1.05
+\!nfo

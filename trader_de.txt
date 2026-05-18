@@ -1,0 +1,219 @@
+BYBIT SPOT SCANNER - LEITFADEN FUER PROFESSIONELLE TRADER
+
+Zweck
+-----
+Dieser Scanner ist ein Echtzeit-Entscheidungstool fuer Spot-Trader.
+
+Er ist kein Kauf-/Verkaufsbot.
+Er ist kein Vorhersagesystem.
+Er ist ein Early-Movement-Scanner, der Coins findet, bei denen sich das Marktverhalten veraendert, bevor die Bewegung offensichtlich wird.
+
+Die wichtigste Frage lautet:
+
+"Welche Coins verdienen jetzt sofort eine Chart-Pruefung?"
+
+
+Kernlogik
+---------
+Das System liest Live-Daten von Bybit Spot.
+
+Fuer jedes Symbol werden analysiert:
+- Live-Preis;
+- Trades;
+- kurzfristiges Volumen;
+- Bid/Ask-Tiefe;
+- Orderbook-Kontext;
+- historische Preis- und Volumenlisten;
+- relative Staerke gegenueber BTC.
+
+Interner Ablauf:
+
+Marktdaten
+-> Echtzeit-Metriken
+-> Score-Berechnung
+-> Rohsignal
+-> Markt-Kontext
+-> Struktur- und Risiko-Klassifizierung
+-> Alert-Karte
+-> optionale visuelle Chart-Analyse
+
+
+Was der Score bedeutet
+----------------------
+Der Score zeigt, wie stark die aktuelle Aktivitaet vom normalen Verhalten des Coins abweicht.
+
+Er ist kein direkter Einstieg.
+Er bedeutet: Der Coin sollte geprueft werden.
+
+Der Score beruecksichtigt:
+- Volumenanomalie;
+- relative Staerke gegenueber BTC;
+- Kompression oder Squeeze;
+- Absorptionsanzeichen;
+- kurzfristiges Preisverhalten;
+- Bid/Ask-Kontext.
+
+Professionelle Interpretation:
+
+Niedriger Score:
+Meist keine Aktion.
+
+Mittlerer Score:
+Aktivitaet ist sichtbar. Coin auf Watchlist setzen.
+
+Hoher Score:
+Sofort den Chart pruefen.
+
+Sehr hoher Score:
+Moegliche Momentum-Phase, aber auch hoeheres Trap-Risiko.
+
+
+Signal-Karte
+------------
+Score
+Staerke des aktuellen Signals.
+
+Tier
+Qualitaet des Setups:
+- A-TIER: starke Struktur;
+- B-TIER: brauchbar, aber nicht perfekt;
+- C-TIER: schwach, laut oder riskant.
+
+Status
+Signal-Lebenszyklus:
+- RAW: fruehes Signal ohne Bestaetigung;
+- CONFIRMED: Bewegung wird bestaetigt;
+- FAILED: keine Fortsetzung;
+- TRAP: moegliche Falle oder Fake-Move.
+
+Risk
+Dynamisches Risiko:
+- LOW: sauberere Struktur;
+- MEDIUM: gemischtes Bild;
+- HIGH: instabil, ueberdehnt oder gefaehrlich.
+
+Trap
+Wahrscheinlichkeit eines falschen Momentum-Moves.
+
+Context
+Markt- und Strukturinterpretation:
+- Marktphase;
+- relative Staerke;
+- Breakout-Qualitaet;
+- Strukturstatus;
+- Erklaerung der Bewertung.
+
+
+Professioneller Workflow
+------------------------
+Nicht nur wegen eines Alerts einsteigen.
+
+Der Alert ist ein Filter.
+Der Chart ist die Entscheidungsflaeche.
+
+Empfohlener Ablauf:
+
+1. Zuerst High-Score-Signale pruefen.
+2. TradingView oeffnen.
+3. 5m, 15m und 1h analysieren.
+4. Lokale Range markieren.
+5. Support und Resistance bestimmen.
+6. Volumenfortsetzung pruefen.
+7. Ueberdehnte Kerzen vermeiden.
+8. Visual-check fuer starke oder unklare Signale nutzen.
+9. Nur handeln, wenn die Struktur die Idee bestaetigt.
+
+
+5m / 15m / 1h
+-------------
+5m
+Zeigt den unmittelbaren Trigger.
+
+15m
+Zeigt, ob die Bewegung echte Fortsetzung hat.
+
+1h
+Zeigt den groesseren Kontext. Widerstand auf 1h kann ein 5m-Signal deutlich schwaechen.
+
+
+Gutes Spot-Setup
+----------------
+Ein gutes Long-Setup hat meist:
+
+- hohen Score;
+- A-TIER oder starkes B-TIER;
+- LOW oder MEDIUM Risk;
+- niedrige Trap-Wahrscheinlichkeit;
+- Breakout oder Reclaim eines wichtigen Levels;
+- Volumenfortsetzung nach dem ersten Impuls;
+- 15m-Bestaetigung;
+- kein naher 1h-Widerstand;
+- visual-check = CONFIRMED oder WAIT mit klarem Trigger.
+
+
+Schwaches Setup
+---------------
+Signal abwerten oder auslassen, wenn:
+
+- Preis vertikal gepumpt ist;
+- lange obere Wick sichtbar ist;
+- Volumen ohne Fortsetzung kommt;
+- Resistance abgelehnt wird;
+- 15m nicht bestaetigt;
+- 1h bearish oder direkt unter Widerstand ist;
+- Trap hoch ist;
+- visual-check = REJECTED.
+
+
+Visual Check
+------------
+Visual-check ist eine manuelle GPT-gestuetzte Chart-Pruefung.
+
+Analysiert werden:
+- 5m;
+- 15m;
+- 1h.
+
+Ergebnis:
+- visueller Status;
+- Setup-Qualitaet;
+- Risiko;
+- Trends je Timeframe;
+- Zusammenfassung;
+- Gruende;
+- Invalidation;
+- naechste Aktion.
+
+CONFIRMED
+Die Chartstruktur unterstuetzt das Scanner-Signal.
+
+WAIT
+Das Signal ist interessant, aber es fehlt noch Bestaetigung.
+
+REJECTED
+Die Struktur unterstuetzt keinen guten Einstieg.
+
+
+Professionelle Entscheidungsregel
+---------------------------------
+Das beste Signal ist nicht der hoechste Score.
+
+Das beste Signal ist dort, wo:
+
+Scanner-Aktivitaet
++ Markt-Kontext
++ Preisstruktur
++ Volumenfortsetzung
++ Risikokontrolle
+
+in dieselbe Richtung zeigen.
+
+
+Grundprinzip
+------------
+Der Scanner findet Aufmerksamkeit.
+Der Chart bestaetigt Struktur.
+Der Trader kontrolliert Risiko.
+
+Ein Alert ist kein Befehl.
+Ein Alert ist ein professioneller Watchlist-Trigger.
