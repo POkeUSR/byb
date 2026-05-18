@@ -360,7 +360,8 @@ async def recent_alerts_api(limit: int = 100, min_score: float = 0):
     limit = max(1, min(limit, 200))
     alerts = []
     try:
-        entries = await redis_client.xrevrange("signal_analytics", count=limit * 3)
+        scan_count = 5000 if min_score > 0 else limit * 3
+        entries = await redis_client.xrevrange("signal_analytics", count=scan_count)
         for _, fields in entries:
             raw = fields.get("data")
             if not raw:

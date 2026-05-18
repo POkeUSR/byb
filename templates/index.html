@@ -475,6 +475,16 @@
                 const payload = await response.json();
                 const alerts = Array.isArray(payload.alerts) ? payload.alerts : [];
                 alerts.reverse().forEach(alert => processAlert(alert, false));
+
+                const highResponse = await fetch(`/api/recent-alerts?limit=${maxHighAlertCards}&min_score=${highAlertScoreThreshold}`);
+                if (!highResponse.ok) return;
+                const highPayload = await highResponse.json();
+                const highAlerts = Array.isArray(highPayload.alerts) ? highPayload.alerts : [];
+                highAlerts.reverse().forEach(alert => {
+                    if (alert.score > highAlertScoreThreshold) {
+                        upsertHighAlert(alert);
+                    }
+                });
             } catch (error) {
                 console.error('Recent alerts unavailable:', error);
             }
