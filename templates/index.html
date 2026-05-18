@@ -336,7 +336,8 @@
         const alertCards = {}; // Store cards by symbol
         const highAlertCards = {};
         const priceCells = {};
-        const maxAlertCards = 100;
+        const trackedSymbolsCount = 100;
+        const maxAlertCards = 12;
         const maxHighAlertCards = 12;
         let lastStatusRender = 0;
         let hasInitialData = false;
@@ -460,7 +461,7 @@
         }
 
         function updateCounts() {
-            if (alertCount) alertCount.textContent = `${alertsGrid.children.length} active`;
+            if (alertCount) alertCount.textContent = `${trackedSymbolsCount} active`;
             if (highAlertCount) highAlertCount.textContent = `${highAlertsGrid.children.length} active`;
         }
 
