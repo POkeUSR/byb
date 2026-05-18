@@ -342,7 +342,7 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/")
 async def read_root():
     """Serve the index.html file."""
-    return FileResponse("templates/index.html")
+    return FileResponse("templates/index.html", headers={"Cache-Control": "no-store"})
 
 @app.get("/visual-check")
 async def visual_check_page():

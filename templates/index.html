@@ -386,6 +386,13 @@
 
             if (data.type === 'system_status') {
                 updateStatusBar(data);
+                const heartbeats = data.heartbeats || {};
+                const now = Date.now() / 1000;
+                const streamerAlive = heartbeats['Streamer'] && now - heartbeats['Streamer'] < heartbeatHealthySeconds;
+                const engineAlive = heartbeats['Engine'] && now - heartbeats['Engine'] < heartbeatHealthySeconds;
+                if (data.redis_status === 'alive' && streamerAlive && engineAlive) {
+                    hideLoadingAlert();
+                }
             } else {
                 const { symbol, score, reasoning, price, timestamp, debug } = data;
 
@@ -683,6 +690,7 @@
 
         ws.onerror = function(error) {
             console.error('WebSocket error:', error);
+            if (bootProgressLabel) bootProgressLabel.textContent = 'connection error';
         };
     </script>
 </body>
