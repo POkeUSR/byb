@@ -323,7 +323,8 @@
     </div>
 
     <script>
-        const ws = new WebSocket('ws://localhost:8000/ws');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
         const alertsGrid = document.getElementById('alerts-grid');
         const highAlertsSection = document.getElementById('high-alerts-section');
         const highAlertsGrid = document.getElementById('high-alerts-grid');
