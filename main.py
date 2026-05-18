@@ -122,6 +122,7 @@ class CryptoScanner:
         payload = {
             "symbol": alert.get("symbol"),
             "score": alert.get("score"),
+            "price": alert.get("price"),
             "timestamp": alert.get("timestamp"),
             "reasoning": alert.get("reasoning", []),
             "intelligence": alert.get("intelligence", {}),

@@ -242,7 +242,7 @@
             <div class="mb-4 flex items-center justify-between gap-3">
                 <div>
                     <h2 class="text-sm text-[var(--warning)]">High Alerts</h2>
-                    <p class="mt-1 text-[10px] uppercase text-[var(--muted)]">Priority setups with score above 80</p>
+                    <p class="mt-1 text-[10px] uppercase text-[var(--muted)]">Telegram-grade setups with score above 100</p>
                 </div>
                 <span id="high-alert-count" class="terminal-label border-[var(--warning)] text-[var(--warning)]">0 active</span>
             </div>
@@ -339,7 +339,8 @@
         const priceCells = {};
         const trackedSymbolsCount = 100;
         const maxAlertCards = 12;
-        const maxHighAlertCards = 12;
+        const maxHighAlertCards = 50;
+        const highAlertScoreThreshold = 100;
         let lastStatusRender = 0;
         let hasInitialData = false;
         let bootProgress = 0;
@@ -398,29 +399,7 @@
                     if (bootProgressLabel) bootProgressLabel.textContent = 'live';
                 }
             } else {
-                const { symbol, score, reasoning, price, timestamp, debug } = data;
-
-                if (score > 80) {
-                    playBeep(3);
-                }
-
-                if (alertCards[symbol]) {
-                    // Update existing card
-                    updateCard(symbol, data);
-                } else {
-                    // Create new card
-                    createCard(data);
-                }
-
-                if (score > 80) {
-                    upsertHighAlert(data);
-                }
-                hideLoadingAlert();
-
-                // Log debug info
-                if (debug) {
-                    console.log(`Debug for ${symbol}:`, debug);
-                }
+                processAlert(data, true);
             }
         };
 
@@ -465,6 +444,43 @@
             if (alertCount) alertCount.textContent = `${trackedSymbolsCount} active`;
             if (highAlertCount) highAlertCount.textContent = `${highAlertsGrid.children.length} active`;
         }
+
+        function processAlert(data, allowSound = false) {
+            const { symbol, score, debug } = data;
+
+            if (allowSound && score > 80) {
+                playBeep(3);
+            }
+
+            if (alertCards[symbol]) {
+                updateCard(symbol, data);
+            } else {
+                createCard(data);
+            }
+
+            if (score > highAlertScoreThreshold) {
+                upsertHighAlert(data);
+            }
+            hideLoadingAlert();
+
+            if (debug) {
+                console.log(`Debug for ${symbol}:`, debug);
+            }
+        }
+
+        async function hydrateRecentAlerts() {
+            try {
+                const response = await fetch('/api/recent-alerts?limit=100');
+                if (!response.ok) return;
+                const payload = await response.json();
+                const alerts = Array.isArray(payload.alerts) ? payload.alerts : [];
+                alerts.reverse().forEach(alert => processAlert(alert, false));
+            } catch (error) {
+                console.error('Recent alerts unavailable:', error);
+            }
+        }
+
+        hydrateRecentAlerts();
 
         function renderCardContent(data) {
             const { symbol, score, price, timestamp } = data;

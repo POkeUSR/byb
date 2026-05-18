@@ -354,6 +354,42 @@ async def health_report_api():
     """Return machine-readable runtime health report."""
     return await build_health_report()
 
+@app.get("/api/recent-alerts")
+async def recent_alerts_api(limit: int = 100, min_score: float = 0):
+    """Return recent scanner alerts stored in Redis Stream."""
+    limit = max(1, min(limit, 200))
+    alerts = []
+    try:
+        entries = await redis_client.xrevrange("signal_analytics", count=limit * 3)
+        for _, fields in entries:
+            raw = fields.get("data")
+            if not raw:
+                continue
+            try:
+                alert = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+
+            score = float(alert.get("score") or 0)
+            if score < min_score:
+                continue
+
+            symbol = alert.get("symbol")
+            if symbol and not alert.get("price"):
+                realtime = await redis_client.hgetall(f"realtime:{symbol}")
+                price = realtime.get("last_price")
+                if price:
+                    alert["price"] = float(price)
+
+            alerts.append(alert)
+            if len(alerts) >= limit:
+                break
+    except Exception as e:
+        logger.error(f"Recent alerts API error: {e}")
+        return JSONResponse({"alerts": [], "error": str(e)}, status_code=500)
+
+    return {"alerts": alerts}
+
 @app.get("/health-report")
 async def health_report_page():
     """Serve a readable scanner health report page."""
